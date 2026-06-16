@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator</title>
+    <script>
+      async function add() {
+        const a = document.getElementById('first').value;
+        const b = document.getElementById('second').value;
+        const res = await fetch(`http://localhost:8001/sum/?a=${a}&b=${b}`);
+        const json = await res.json();
+        document.getElementById('response').innerHTML = json.sum;
+      }
+
+      async function sub() {
+        const a = document.getElementById('first').value;
+        const b = document.getElementById('second').value;
+        const res = await fetch(`http://localhost:8001/sub/${a}/${b}`);
+        const json = await res.json();
+        document.getElementById('response').innerHTML = json.diff;
+      }
+
+      async function multi() {
+        const a = document.getElementById('first').value;
+        const b = document.getElementById('second').value;
+
+        const res = await fetch('http://localhost:8001/multi', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            a,
+            b,
+          }),
+        });
+
+        const json = await res.json();
+
+        document.getElementById('response').innerHTML = json.product;
+      }
+
+      async function div() {
+        const a = document.getElementById('first').value;
+        const b = document.getElementById('second').value;
+
+        const res = await fetch('http://localhost:8001/div', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            a,
+            b,
+          }),
+        });
+
+        const json = await res.json();
+
+        document.getElementById('response').innerHTML = json.division;
+    }
+    </script>
+  </head>
+  <body>
+    <h1>CALCULATOR</h1>
+    <input id="first" type="text" placeholder="first number" />
+    <input id="second" type="text" placeholder="second number" />
+
+    <button onclick="add()">Addition</button>
+    <button onclick="sub()">Subtraction</button>
+    <button onclick="multi()">Multiply</button>
+    <button onclick="div()"()>Divide</button>
+    <div id="response"></div>
+  </body>
+</html>
