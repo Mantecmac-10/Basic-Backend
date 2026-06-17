@@ -66,14 +66,14 @@ app.post('/signin', function (req, res) {
   });
 });
 
-app.post('/notes', function (req, res) {
+app.post('/notes', auth, function (req, res) {
   const note = req.body.note;
   notes.push(note);
 
   res.json({ message: 'Done!' });
 });
 
-app.get('/notes', function (req, res) {
+app.get('/notes', auth, function (req, res) {
   res.json({ notes });
 });
 
