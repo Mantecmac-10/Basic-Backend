@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NotesApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div
+      style="display: flex; justify-content: space-between; padding: 0px 100px"
+    >
+      <div id="notes">Loading...</div>
+
+      <div>
+        <input type="text" id="userNote" />
+        <button onclick="addTodo()">Create new note</button>
+      </div>
+    </div>
+
+    <script>
+      async function addTodo() {
+        const note = document.getElementById('userNote').value.trim();
+
+        if (!note) {
+          alert('Please enter a note');
+          return;
+        }
+
+        await axios.post('http://localhost:8001/notes', {
+          note: note,
+        });
+
+        const newNote = document.createElement('div');
+
+        newNote.innerHTML = document.getElementById('userNote').value;
+        newNote.setAttribute(
+          'style',
+          'border: 2px solid black; padding: 10px;',
+        );
+        document.getElementById('notes').appendChild(newNote);
+
+        document.getElementById('userNote').value = '';
+      }
+
+      async function getTodos() {
+        const response = await axios.get('http://localhost:8001/notes');
+        const notes = response.data.notes;
+
+        document.getElementById('notes').innerHTML = '';
+
+        for (let i = 0; i < notes.length; i++) {
+          const noteNote = document.createElement('div');
+          noteNote.innerHTML = notes[i];
+          noteNote.setAttribute(
+            'style',
+            'border: 2px solid black; padding: 10px;',
+          );
+
+          if (noteNote.innerHTML.trim()) {
+            document.getElementById('notes').appendChild(noteNote);
+          }
+        }
+      }
+
+      getTodos();
+    </script>
+  </body>
+</html>
