@@ -8,6 +8,13 @@ import { orgModel } from './models/org.js';
 import { authMiddleware } from './middleware.js';
 import { issueModel } from './models/issue.js';
 import { boardModel } from './models/boards.js';
+import {
+  boardSchema,
+  issueSchema,
+  orgnaizationSchema,
+  SigninSchema,
+  SignupSchema,
+} from './validator.js';
 
 const secret = process.env.JWT_SECRET;
 
@@ -20,8 +27,15 @@ app.use(express.json());
 const PORT = 8001;
 
 app.post('/signup', async (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+  const { data, success } = SignupSchema.safeParse(req.body);
+
+  if (!success) {
+    res.json({ message: 'Invalid Input' });
+    return;
+  }
+
+  const { username, password } = data;
+
   const userExist = await userModel.findOne({
     username,
   });
@@ -41,8 +55,14 @@ app.post('/signup', async (req, res) => {
 });
 
 app.post('/signin', async (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+  const { data, success } = SigninSchema.safeParse(req.body);
+
+  if (!success) {
+    return res.status(400).json({ message: 'inavlid input' });
+  }
+
+  const { username, password } = data;
+
   const userExist = await userModel.findOne({ username, password });
 
   if (!userExist) {
@@ -52,7 +72,7 @@ app.post('/signin', async (req, res) => {
     {
       id: userExist._id,
     },
-    'secret',
+    secret,
   );
 
   res.json({ message: 'User Signed In!', token });
@@ -61,9 +81,17 @@ app.post('/signin', async (req, res) => {
 app.post('/organizations', authMiddleware, async (req, res) => {
   const userId = req.userId;
 
+  const { data, success } = orgnaizationSchema.safeParse(req.body);
+
+  if (!success) {
+    return res.json({ message: 'Invalid Input' });
+  }
+
+  const { title, description } = data;
+
   const newOrg = await orgModel.create({
-    title: req.body.title,
-    description: req.body.description,
+    title,
+    description,
     admin: userId,
     members: [],
   });
@@ -105,7 +133,13 @@ app.post('/add-member', authMiddleware, async (req, res) => {
 
 app.post('/board', authMiddleware, async (req, res) => {
   const userId = req.userId;
-  const { title, description, organizationId } = req.body;
+  const { data, success } = boardSchema.safeParse(req.body);
+
+  if (!success) {
+    return res.json({ message: 'Invalid Input' });
+  }
+
+  const { title, description, organizationId } = data;
 
   const organization = await orgModel.findOne({ _id: organizationId });
 
@@ -133,7 +167,13 @@ app.post('/board', authMiddleware, async (req, res) => {
 
 app.post('/issue', authMiddleware, async (req, res) => {
   const userId = req.userId;
-  const { title, description, boardId, assignedTo } = req.body;
+  const { data, success } = issueSchema.safeParse(req.body);
+
+  if (!success) {
+    return res.json({ message: 'Invalid Input' });
+  }
+
+  const { title, description, assignedTo, boardId } = data;
 
   const board = await boardModel.findOne({ _id: boardId });
 
@@ -267,7 +307,7 @@ app.put('/issues', authMiddleware, async (req, res) => {
   const organization = await orgModel.findOne({ _id: board.organizationId });
 
   const isMember =
-    organization.admin.toString() === userI.toString() ||
+    organization.admin.toString() === userId.toString() ||
     organization.members.some((m) => m.toString() === userId.toString());
 
   if (!isMember) {
