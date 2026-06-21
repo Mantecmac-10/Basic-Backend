@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import { userModel } from './models/user.js';
 import { connectdb } from './db.js';
@@ -44,9 +45,11 @@ app.post('/signup', async (req, res) => {
     return res.status(400).json({ message: 'username already exists' });
   }
 
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   const user = await userModel.create({
     username,
-    password,
+    password: hashedPassword,
   });
 
   const result = await userModel.findById(user._id).select('-password');
@@ -63,11 +66,20 @@ app.post('/signin', async (req, res) => {
 
   const { username, password } = data;
 
-  const userExist = await userModel.findOne({ username, password });
+  const userExist = await userModel.findOne({ username });
 
   if (!userExist) {
     res.status(400).json({ message: 'Wrong Credentials.' });
   }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.status(400).json({
+      message: 'Wrong credentials',
+    });
+  }
+
   const token = jwt.sign(
     {
       id: userExist._id,
